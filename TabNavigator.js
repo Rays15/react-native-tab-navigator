@@ -20,7 +20,7 @@ export default class TabNavigator extends React.Component {
   static propTypes = {
     ...ViewPropTypes,
     sceneStyle: ViewPropTypes.style,
-    tabBarStyle: TabBar.propTypes.style,
+    tabBarStyle: ViewPropTypes.style,
     tabBarShadowStyle: TabBar.propTypes.shadowStyle,
     hidesTabTouch: PropTypes.bool
   };
@@ -28,13 +28,13 @@ export default class TabNavigator extends React.Component {
   constructor(props, context) {
     super(props, context);
     this.state = {
-      renderedSceneKeys: this._updateRenderedSceneKeys(props.children),
+      renderedSceneKeys: TabNavigator._updateRenderedSceneKeys(props.children),
     };
 
     this._renderTab = this._renderTab.bind(this);
   }
 
-  componentWillReceiveProps(nextProps) {
+  /*componentWillReceiveProps(nextProps) {
     let { renderedSceneKeys } = this.state;
     this.setState({
       renderedSceneKeys: this._updateRenderedSceneKeys(
@@ -42,19 +42,32 @@ export default class TabNavigator extends React.Component {
         renderedSceneKeys,
       ),
     });
+  }*/
+
+  static getDerivedStateFromProps(props, state) {
+    const renderedSceneKeys = TabNavigator._updateRenderedSceneKeys(
+      props.children,
+      state.renderedSceneKeys,
+    );
+    if (!renderedSceneKeys) {
+      return null;
+    }
+    return {
+      renderedSceneKeys,
+    };
   }
 
-  _getSceneKey(item, index): string {
+  static _getSceneKey(item, index): string {
     return `scene-${(item.key !== null) ? item.key : index}`;
   }
 
-  _updateRenderedSceneKeys(children, oldSceneKeys = Set()): Set {
+  static _updateRenderedSceneKeys(children, oldSceneKeys = Set()): Set {
     let newSceneKeys = Set().asMutable();
     React.Children.forEach(children, (item, index) => {
       if (item === null) {
         return;
       }
-      let key = this._getSceneKey(item, index);
+      let key = TabNavigator._getSceneKey(item, index);
       if (oldSceneKeys.has(key) || item.props.selected) {
         newSceneKeys.add(key);
       }
@@ -70,7 +83,7 @@ export default class TabNavigator extends React.Component {
       if (item === null) {
         return;
       }
-      let sceneKey = this._getSceneKey(item, index);
+      let sceneKey = TabNavigator._getSceneKey(item, index);
       if (!this.state.renderedSceneKeys.has(sceneKey)) {
         return;
       }
